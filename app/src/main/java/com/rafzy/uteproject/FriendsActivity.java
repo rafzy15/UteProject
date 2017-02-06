@@ -1,7 +1,6 @@
 package com.rafzy.uteproject;
 
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -13,27 +12,20 @@ import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.HttpRequestHandler;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -43,8 +35,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-public class MainActivity extends ActionBarActivity {
-    private final static String APIKEY = "e5144dd5-5924-452a-a520-1f0966d71636";
+public class FriendsActivity extends ActionBarActivity {
+    private static final String TAG = "Friends_Activity";
     private final static String xmlResult = "<response><msisdn>48510123456</msisdn><terminal-availability>AVAILABLE</terminal-availability><terminal-page-result>OK</terminal-page-result><age-of-location>0</age-of-location><location-information><current-lac>58140</current-lac><current-cell-id>47025</current-cell-id></location-information></response>";
     private String myCellNumber;
     private Pair<Double,Double> myPosition;
@@ -71,9 +63,9 @@ public class MainActivity extends ActionBarActivity {
         getAllCulturalObjectNearMe(simSerialNumber);
         //// TODO: 12/28/16 send sms to the friends which are at the same cell about what is interesting near me
 
-        getFriendPosition();
-        Intent mapIntent = new Intent(this, MapsActivity.class);
-        startActivity(mapIntent);
+//        getFriendPosition();
+//        Intent mapIntent = new Intent(this, MapsActivity.class);
+//        startActivity(mapIntent);
     }
     private void setMyPositionAndCell(String number){
         this.myCellNumber = getCellNumber(number);
@@ -81,7 +73,14 @@ public class MainActivity extends ActionBarActivity {
 
     public List<String> getAllCulturalObjectNearMe(String myNumber) {
         //// TODO: 12/28/16 get position and object near me (dane po warszawsku)
-        String urlToGetPosition = "https://api.bihapi.pl/orange/oracle/cellid?msisdn=+" + myNumber;
+        String apiID = "e26218cb-61ec-4ccb-81cc-fd19a6fee0f8";
+        String urlToGetCulturalObject = Helper.getConfigValue(this,"um_url")+ "wfsstore_get/?id="+
+                apiID +"&circle=21.02%2C52.21%2C1000&limit=3&"+
+                "apikey="+Helper.getConfigValue(this,"api_key");
+        Log.i(TAG,urlToGetCulturalObject);
+        JsonFromApiGetter umApiGetter = new JsonFromApiGetter();
+        umApiGetter.execute(urlToGetCulturalObject);
+
         //// TODO: 12/28/16 parse result json
         return new ArrayList<String>();
     }
@@ -129,37 +128,56 @@ public class MainActivity extends ActionBarActivity {
         return friendNumbers;
     }
 
-    private class BihapiGetter extends AsyncTask<String, Integer, String> {
+    private class JsonFromApiGetter extends AsyncTask<String, Integer, JSONObject> {
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            Toast.makeText(MainActivity.this, "Json Data is downloading", Toast.LENGTH_LONG).show();
+            Toast.makeText(FriendsActivity.this, "Json Data is downloading", Toast.LENGTH_LONG).show();
         }
 
         @Override
-        protected String doInBackground(String... arg0) {
-            URL apiUM  = null;
-            long a = 10;
+        protected JSONObject doInBackground(String... arg0) {
+            URL apiUrlObject  = null;
+            JSONObject jsonObject = null;
             try {
-                apiUM = new URL("https://api.um.warszawa.pl/api/action/datastore_search?resource_id=0b1af81f-247d-4266-9823-693858ad5b5d&limit=5");
+                apiUrlObject = new URL(arg0[0]);
 
                 BufferedReader in = new BufferedReader(
                         new InputStreamReader(
-                                apiUM.openStream()));
+                                apiUrlObject.openStream()));
 
-                String inputLine;
+                String inputLine = "";
+                StringBuilder stringJson = new StringBuilder();
+                while ((inputLine = in.readLine()) != null){
+                    stringJson.append(inputLine);
+                }
 
-                while ((inputLine = in.readLine()) != null)
-                    System.out.println(inputLine);
+
+                jsonObject = new JSONObject(stringJson.toString());
 
                 in.close();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
+            }catch (JSONException e){
+                e.printStackTrace();
             }
-            return "sda";
+            return jsonObject;
         }
+         protected void onPostExecute(JSONObject result){
+             TextView culturalObjectText = (TextView) findViewById(R.id.culturalObject);
+             try {
+                 //TODO allow to choose object from all (this include name and link etc)
+                 Log.i(TAG,result.getJSONObject("result").
+                         getJSONArray("featureMemberProperties").toString());
+                 culturalObjectText.setText(result.getJSONObject("result").
+                         getJSONArray("featureMemberProperties").getJSONObject(0).getString("WWW"));
+             } catch (JSONException e) {
+                 e.printStackTrace();
+             }
+         }
     }
 
     public List getContact() {
