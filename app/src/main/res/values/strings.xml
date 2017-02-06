@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">UteProject</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="share_with_friends">Podziel się ze znajomymi</string>
+    <string name="read_all_contact">Znajdź wszystkie kontakty</string>
 </resources>
