@@ -12,9 +12,11 @@ import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
@@ -29,23 +31,50 @@ import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-public class FriendsActivity extends ActionBarActivity {
-    private static final String TAG = "Friends_Activity";
+public class CulturalObjectActivity extends ActionBarActivity {
+
+    private static final String TAG = "Cultural_Activity";
+    private static final String EXPANDABLE_LIST_KEY = "TEATRY BLISKO CIEBIE";
     private final static String xmlResult = "<response><msisdn>48510123456</msisdn><terminal-availability>AVAILABLE</terminal-availability><terminal-page-result>OK</terminal-page-result><age-of-location>0</age-of-location><location-information><current-lac>58140</current-lac><current-cell-id>47025</current-cell-id></location-information></response>";
     private String myCellNumber;
     private Pair<Double,Double> myPosition;
+    private Context context = this;
+
+    private ExpandableListView expandableListView;
+    private ExpandableListAdapter expandableListAdapter;
+    private List<String> expandableListTitle;
+    private HashMap<String, List<String>> expandableListDetail;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        new BihapiGetter().execute("");
+
+        expandableListView = (ExpandableListView) findViewById(R.id.culturalObjectExpendableList);
+        expandableListDetail = new HashMap<>();
+
+        expandableListDetail.put(EXPANDABLE_LIST_KEY, new ArrayList<String>());
+        expandableListTitle = new ArrayList<>(expandableListDetail.keySet());
+        expandableListAdapter = new ExpandableListAdapter(this, expandableListTitle, expandableListDetail);
+        expandableListView.setAdapter(expandableListAdapter);
+        expandableListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+            @Override
+            public boolean onGroupClick(ExpandableListView p, View v, int grpPos, long id) {
+                getAllCulturalObjectNearMe("");
+                return false;
+            }
+
+
+        });
+
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -71,7 +100,7 @@ public class FriendsActivity extends ActionBarActivity {
         this.myCellNumber = getCellNumber(number);
     }
 
-    public List<String> getAllCulturalObjectNearMe(String myNumber) {
+    public void getAllCulturalObjectNearMe(String myNumber) {
         //// TODO: 12/28/16 get position and object near me (dane po warszawsku)
         String apiID = "e26218cb-61ec-4ccb-81cc-fd19a6fee0f8";
         String urlToGetCulturalObject = Helper.getConfigValue(this,"um_url")+ "wfsstore_get/?id="+
@@ -82,7 +111,6 @@ public class FriendsActivity extends ActionBarActivity {
         umApiGetter.execute(urlToGetCulturalObject);
 
         //// TODO: 12/28/16 parse result json
-        return new ArrayList<String>();
     }
     private String getCellNumber(String number){
         Element currentCell = null;
@@ -133,7 +161,7 @@ public class FriendsActivity extends ActionBarActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            Toast.makeText(FriendsActivity.this, "Json Data is downloading", Toast.LENGTH_LONG).show();
+            Toast.makeText(CulturalObjectActivity.this, "Pobierane są informacje o teatrze", Toast.LENGTH_LONG).show();
         }
 
         @Override
@@ -141,22 +169,24 @@ public class FriendsActivity extends ActionBarActivity {
             URL apiUrlObject  = null;
             JSONObject jsonObject = null;
             try {
-                apiUrlObject = new URL(arg0[0]);
+                if(expandableListDetail.get(EXPANDABLE_LIST_KEY).isEmpty()) {
+                    apiUrlObject = new URL(arg0[0]);
 
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(
-                                apiUrlObject.openStream()));
+                    BufferedReader in = new BufferedReader(
+                            new InputStreamReader(
+                                    apiUrlObject.openStream()));
 
-                String inputLine = "";
-                StringBuilder stringJson = new StringBuilder();
-                while ((inputLine = in.readLine()) != null){
-                    stringJson.append(inputLine);
+                    String inputLine = "";
+                    StringBuilder stringJson = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        stringJson.append(inputLine);
+                    }
+
+
+                    jsonObject = new JSONObject(stringJson.toString());
+
+                    in.close();
                 }
-
-
-                jsonObject = new JSONObject(stringJson.toString());
-
-                in.close();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -168,12 +198,23 @@ public class FriendsActivity extends ActionBarActivity {
         }
          protected void onPostExecute(JSONObject result){
              TextView culturalObjectText = (TextView) findViewById(R.id.culturalObject);
+
              try {
-                 //TODO allow to choose object from all (this include name and link etc)
-                 Log.i(TAG,result.getJSONObject("result").
-                         getJSONArray("featureMemberProperties").toString());
-                 culturalObjectText.setText(result.getJSONObject("result").
-                         getJSONArray("featureMemberProperties").getJSONObject(0).getString("WWW"));
+                     JSONArray theatreArray = result.getJSONObject("result").
+                             getJSONArray("featureMemberProperties");
+                     List<String> theatreList = new ArrayList<>();
+                     for (int i = 0; i < theatreArray.length(); i++) {
+                         String theatreUrl = theatreArray.getJSONObject(i).getString("WWW");
+                         String theatreName = theatreArray.getJSONObject(i).getString("OPIS");
+                         String street = theatreArray.getJSONObject(i).getString("ULICA");
+                         String number = theatreArray.getJSONObject(i).getString("NUMER");
+                         theatreList.add(theatreName + "\n" + theatreUrl + "\n" + street + " " + number);
+                     }
+                     expandableListDetail.put(EXPANDABLE_LIST_KEY, theatreList);
+                     expandableListTitle = new ArrayList<>(expandableListDetail.keySet());
+                     expandableListAdapter.setExpandableLists(expandableListDetail, expandableListTitle);
+                     expandableListAdapter.notifyDataSetChanged();
+
              } catch (JSONException e) {
                  e.printStackTrace();
              }
