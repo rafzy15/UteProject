@@ -2,11 +2,16 @@ package com.rafzy.uteproject;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,14 +19,15 @@ import java.util.List;
 /**
  * Created by root on 2/7/17.
  */
-public class ExpandableListAdapter extends BaseExpandableListAdapter {
+public class FriendListAdapter extends BaseExpandableListAdapter {
 
     private Context context;
     private List<String> expandableListTitle;
-    private HashMap<String, List<String>> expandableListDetail;
+    private HashMap<String, List<FriendObject>> expandableListDetail;
 
-    public ExpandableListAdapter(Context context, List<String> expandableListTitle,
-                                 HashMap<String, List<String>> expandableListDetail) {
+
+    public FriendListAdapter(Context context, List<String> expandableListTitle,
+                             HashMap<String, List<FriendObject>> expandableListDetail) {
         this.context = context;
         this.expandableListTitle = expandableListTitle;
         this.expandableListDetail = expandableListDetail;
@@ -41,21 +47,26 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     public long getChildId(int listPosition, int expandedListPosition) {
         return expandedListPosition;
     }
-
     @Override
-    public View getChildView(int listPosition, final int expandedListPosition,
+    public View getChildView(final int listPosition, final int expandedListPosition,
                              boolean isLastChild, View convertView, ViewGroup parent) {
-        final String expandedListText = (String) getChild(listPosition, expandedListPosition);
+        final FriendObject expandedListText = (FriendObject) getChild(listPosition, expandedListPosition);
+
         if (convertView == null) {
             LayoutInflater layoutInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = layoutInflater.inflate(R.layout.list_item, null);
+
+            convertView = layoutInflater.inflate(R.layout.list_item_friend, null);
         }
-        TextView expandedListTextView = (TextView) convertView
-                .findViewById(R.id.expendedListItem);
-        expandedListTextView.setText(expandedListText);
+
+
+        TextView textView = (TextView) convertView.findViewById(R.id.expandedFriendName);
+        textView.setText(expandedListText.getName());
+        TextView textView1 = (TextView) convertView.findViewById(R.id.expandedFriendNumber);
+        textView1.setText(expandedListText.getNumber());
         return convertView;
     }
+
 
     @Override
     public int getChildrenCount(int listPosition) {

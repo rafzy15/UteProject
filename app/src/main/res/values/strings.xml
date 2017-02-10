@@ -1,7 +1,15 @@
 <resources>
-    <string name="app_name">UteProject</string>
+    <string name="app_name">UTE Projekt</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_maps">Map</string>
     <string name="share_with_friends">Podziel się ze znajomymi</string>
     <string name="read_all_contact">Znajdź wszystkie kontakty</string>
+    <string-array name="friend_array">
+        <item>Drinks 517567422</item>
+        <item>Food </item>
+        <item>Stores</item>
+    </string-array>
+    <color name="black_background">#000000</color>
+    <color name="white_letter">#f0f0f0</color>
+    <string name="friend_header">Znajomi</string>
 </resources>
