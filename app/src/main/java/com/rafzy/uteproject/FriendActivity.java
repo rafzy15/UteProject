@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
@@ -40,18 +41,14 @@ public class FriendActivity extends ActionBarActivity {
     private List<String> expandableListTitle;
     private HashMap<String, List<FriendObject>> expandableListDetail;
     private List<String> checkedChild;
+    private final static String FRIEND_TAG = "Friend_tag";
     @Override
     protected void onCreate(Bundle savedInstance){
         super.onCreate(savedInstance);
         setContentView(R.layout.friend_layout);
-        List<FriendObject> friendsList =  new ArrayList<>();
+        List<FriendObject> friendsList = getFriendsFromDatabase();
         expandableListView = (ExpandableListView) findViewById(R.id.friendExpendableList);
         expandableListDetail = new HashMap<>();
-        //TODO add elements to the list from database
-        //TODO allow to add friends.
-        friendsList.add(new FriendObject("adam ","5498234982"));
-        friendsList.add(new FriendObject("Jan", "55323"));
-        friendsList.add(new FriendObject("Johny", "5532335"));
 
         expandableListDetail.put("ZNAJOMI", friendsList);
 
@@ -61,22 +58,22 @@ public class FriendActivity extends ActionBarActivity {
         expandableListView.setAdapter(friendListAdapter);
         expandableListView.expandGroup(0);
         checkedChild = new LinkedList<>();
-        expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener(){
+        expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent,
                                         View v,
                                         int groupPosition,
                                         int childPosition,
                                         long id) {
-                Toast.makeText(FriendActivity.this,"das",Toast.LENGTH_SHORT).show();
-                CheckBox cb = (CheckBox)v.findViewById(R.id.checkbox_item);
-                 cb = (CheckBox)v.findViewById(R.id.checkbox_item);
+                Toast.makeText(FriendActivity.this, "das", Toast.LENGTH_SHORT).show();
+                CheckBox cb = (CheckBox) v.findViewById(R.id.checkbox_item);
+                cb = (CheckBox) v.findViewById(R.id.checkbox_item);
 
                 cb.setChecked(!cb.isChecked());
                 TextView friendNumber = (TextView) v.findViewById(R.id.expandedFriendNumber);
-                if(cb.isChecked()){
-                    checkedChild.add((String)friendNumber.getText());
-                }else {
+                if (cb.isChecked()) {
+                    checkedChild.add((String) friendNumber.getText());
+                } else {
                     checkedChild.remove(friendNumber.getText());
                 }
                 System.out.println(checkedChild.toString());
@@ -84,13 +81,29 @@ public class FriendActivity extends ActionBarActivity {
                 return true;
             }
         });
+
+
+
+
+    }
+    private List<FriendObject> getFriendsFromDatabase(){
         FriendsDatabaseHelper friendsDatabaseHelper = new FriendsDatabaseHelper(this);
         SQLiteDatabase db = friendsDatabaseHelper.getReadableDatabase();
         checkButtonClick();
-//        Cursor cursor =
-//                db.query("FRIENDS", new String[]{"NAME", "NUMBER"}, null, null, null, null, null);
-//        Log.i("Friend TAG","cursor " + cursor.getString(0));
+        Cursor cursor =
+                db.query("FRIENDS", new String[]{"NAME", "NUMBER"}, null, null, null, null, null);
+        List<FriendObject> friendsList =  new LinkedList<>();
+        while(cursor.moveToNext()) {
+            String name = cursor.getString(
+                    0);
+            String number = cursor.getString(
+                    1);
+            FriendObject friendObject = new FriendObject(name,number);
+            friendsList.add(friendObject);
 
+        }
+        cursor.close();
+        return friendsList;
     }
     private void checkButtonClick() {
         Button myButton = (Button) findViewById(R.id.findSelected);
@@ -101,11 +114,6 @@ public class FriendActivity extends ActionBarActivity {
 
                 StringBuffer responseText = new StringBuffer();
                 responseText.append("The following were selected...\n");
-
-                friendListAdapter.isChildSelectable(0,0);
-//                for(int i=0;i<numberOfFriend;i++){
-//                    System.out.println(expandableListAdapter.getChild(0,0));
-//                }
 
                 Toast.makeText(getApplicationContext(),
                         responseText, Toast.LENGTH_LONG).show();

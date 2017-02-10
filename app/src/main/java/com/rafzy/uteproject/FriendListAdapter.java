@@ -61,7 +61,7 @@ public class FriendListAdapter extends BaseExpandableListAdapter {
 
 
         TextView textView = (TextView) convertView.findViewById(R.id.expandedFriendName);
-        textView.setText(expandedListText.getName());
+        textView.setText(expandedListText.getName()+" ");
         TextView textView1 = (TextView) convertView.findViewById(R.id.expandedFriendNumber);
         textView1.setText(expandedListText.getNumber());
         return convertView;

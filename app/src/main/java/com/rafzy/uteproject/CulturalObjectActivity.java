@@ -80,7 +80,6 @@ public class CulturalObjectActivity extends ActionBarActivity {
 
 
         });
-        //TODO get position of me
 
     }
 
@@ -119,11 +118,7 @@ public class CulturalObjectActivity extends ActionBarActivity {
 
 
     public void getAllCulturalObjectNearMe(String myNumber) {
-        //// TODO: 12/28/16 get position and find object near me (dane po warszawsku)
         String apiID = "e26218cb-61ec-4ccb-81cc-fd19a6fee0f8";
-//        String urlToGetCulturalObject = Helper.getConfigValue(this,"um_url")+ "wfsstore_get/?id="+
-//                apiID +"&circle=21.02%2C52.21%2C1000&limit=3&"+
-//                "apikey="+Helper.getConfigValue(this,"api_key");
         double latitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
         double longitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
         Log.i(TAG, "latitude" + latitude
