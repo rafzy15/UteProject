@@ -15,6 +15,7 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private String longitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +25,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        longitude = getIntent().getStringExtra("LONGTITUDE");
+
     }
 
     /**
@@ -42,7 +45,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Add a marker in Sydney and move the camera
         LatLng warsaw = new LatLng(52.2296756, 21.012228999999934);
         LatLng sydney1 = new LatLng(52.2286756, 21.042228999999934);
-        mMap.addMarker(new MarkerOptions().position(warsaw).title("Marker in Warsaw"));
+        mMap.addMarker(new MarkerOptions().position(warsaw).title(longitude));
         mMap.addMarker(new MarkerOptions().position(sydney1).title("Marker in Warsaw"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(warsaw));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(10.0f));

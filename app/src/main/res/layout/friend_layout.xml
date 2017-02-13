@@ -9,10 +9,16 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin">
     <Button
-        android:id="@+id/findSelected"
+        android:id="@+id/sendToFriendsButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Find countries that are Selected" />
+        android:text="Wyślij informacje do znajomych" />
+    <Button
+        android:id="@+id/showOnMapButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:text="Pokaż na mapie" />
     <ExpandableListView
         android:id="@+id/friendExpendableList"
         android:layout_width="match_parent"

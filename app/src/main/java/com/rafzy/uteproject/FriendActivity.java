@@ -1,6 +1,7 @@
 package com.rafzy.uteproject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ public class FriendActivity extends ActionBarActivity {
     private HashMap<String, List<FriendObject>> expandableListDetail;
     private List<String> checkedChild;
     private final static String FRIEND_TAG = "Friend_tag";
+    private String longtitude = "21";
     @Override
     protected void onCreate(Bundle savedInstance){
         super.onCreate(savedInstance);
@@ -106,7 +108,7 @@ public class FriendActivity extends ActionBarActivity {
         return friendsList;
     }
     private void checkButtonClick() {
-        Button myButton = (Button) findViewById(R.id.findSelected);
+        Button myButton = (Button) findViewById(R.id.sendToFriendsButton);
         myButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -117,6 +119,7 @@ public class FriendActivity extends ActionBarActivity {
 
                 Toast.makeText(getApplicationContext(),
                         responseText, Toast.LENGTH_LONG).show();
+
 
             }
         });
@@ -190,8 +193,7 @@ public class FriendActivity extends ActionBarActivity {
         //// TODO: 12/28/16 send sms to the friends which are at the same cell about what is interesting near me
 
 //        getFriendPosition();
-//        Intent mapIntent = new Intent(this, MapsActivity.class);
-//        startActivity(mapIntent);
+//
     }
     private void setMyPositionAndCell(String number){
         this.myCellNumber = getCellNumber(number);
