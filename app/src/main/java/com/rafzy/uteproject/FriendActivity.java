@@ -1,9 +1,11 @@
 package com.rafzy.uteproject;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
@@ -43,7 +45,11 @@ public class FriendActivity extends ActionBarActivity {
     private HashMap<String, List<FriendObject>> expandableListDetail;
     private List<String> checkedChild;
     private final static String FRIEND_TAG = "Friend_tag";
-    private String longtitude = "21";
+
+    private String longtitude = "";
+    private final static int PICK_CONTACT = 1;
+
+    private FriendsDatabaseHelper friendsDatabaseHelper;
     @Override
     protected void onCreate(Bundle savedInstance){
         super.onCreate(savedInstance);
@@ -67,7 +73,6 @@ public class FriendActivity extends ActionBarActivity {
                                         int groupPosition,
                                         int childPosition,
                                         long id) {
-                Toast.makeText(FriendActivity.this, "das", Toast.LENGTH_SHORT).show();
                 CheckBox cb = (CheckBox) v.findViewById(R.id.checkbox_item);
                 cb = (CheckBox) v.findViewById(R.id.checkbox_item);
 
@@ -78,20 +83,13 @@ public class FriendActivity extends ActionBarActivity {
                 } else {
                     checkedChild.remove(friendNumber.getText());
                 }
-                System.out.println(checkedChild.toString());
-
                 return true;
             }
         });
-
-
-
-
     }
     private List<FriendObject> getFriendsFromDatabase(){
-        FriendsDatabaseHelper friendsDatabaseHelper = new FriendsDatabaseHelper(this);
+        friendsDatabaseHelper = new FriendsDatabaseHelper(this);
         SQLiteDatabase db = friendsDatabaseHelper.getReadableDatabase();
-        checkButtonClick();
         Cursor cursor =
                 db.query("FRIENDS", new String[]{"NAME", "NUMBER"}, null, null, null, null, null);
         List<FriendObject> friendsList =  new LinkedList<>();
@@ -107,23 +105,47 @@ public class FriendActivity extends ActionBarActivity {
         cursor.close();
         return friendsList;
     }
-    private void checkButtonClick() {
-        Button myButton = (Button) findViewById(R.id.sendToFriendsButton);
-        myButton.setOnClickListener(new View.OnClickListener() {
 
-            @Override
-            public void onClick(View v) {
+    public void onClickAddFriend(View view){
+        Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+        startActivityForResult(intent, PICK_CONTACT);
 
-                StringBuffer responseText = new StringBuffer();
-                responseText.append("The following were selected...\n");
+    }
+    @Override
+    public void onActivityResult(int reqCode, int resultCode, Intent data) {
+        super.onActivityResult(reqCode, resultCode, data);
 
-                Toast.makeText(getApplicationContext(),
-                        responseText, Toast.LENGTH_LONG).show();
+        switch (reqCode) {
+            case (PICK_CONTACT) :
+                if (resultCode == Activity.RESULT_OK) {
+                    Uri contactData = data.getData();
+                    Cursor c =  getContentResolver().query(contactData, null, null, null, null);
+                    if (c.moveToFirst()) {
+                        String id = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
 
+                        String hasPhone = c.getString(c.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
 
-            }
-        });
+                        if (hasPhone.equalsIgnoreCase("1")){
 
+                            Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+                                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id, null, null);
+                            phones.moveToFirst();
+                            String cNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+
+                            String nameContact = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME));
+                            SQLiteDatabase db = friendsDatabaseHelper.getWritableDatabase();
+                            friendsDatabaseHelper.insertFriend(db,nameContact,cNumber);
+
+                            List<FriendObject> friendsList = getFriendsFromDatabase();
+                            expandableListDetail.put("ZNAJOMI", friendsList);
+                            friendListAdapter.notifyDataSetChanged();
+                        }else{
+                            Toast.makeText(getApplicationContext(),"Wybrany użytkownik nie ma numeru", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+                break;
+        }
     }
 
 

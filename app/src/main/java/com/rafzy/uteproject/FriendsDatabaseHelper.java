@@ -21,7 +21,7 @@ public class FriendsDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE FRIENDS ("
                 + "friend_id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "NAME TEXT, "
-                + "NUMBER INTEGER);");
+                + "NUMBER TEXT);");
 
 
     }
@@ -42,12 +42,6 @@ public class FriendsDatabaseHelper extends SQLiteOpenHelper {
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE FRIENDS");
-        db.execSQL("CREATE TABLE FRIENDS ("
-                + "friend_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + "NAME TEXT, "
-                + "NUMBER TEXT);");
-        insertFriend(db, "AREK","23325345");
-        insertFriend(db, "CZarek","748347");
+
     }
 }
