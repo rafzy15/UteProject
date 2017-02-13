@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:text="Wyślij informacje do znajomych" />
     <Button
-        android:id="@+id/addFriendF"
+        android:id="@+id/addFriendButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="onClickAddFriend"
@@ -24,7 +24,7 @@
         android:id="@+id/showOnMapButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
+        android:onClick="onClickShowMap"
         android:text="Pokaż na mapie" />
     <ExpandableListView
         android:id="@+id/friendExpendableList"

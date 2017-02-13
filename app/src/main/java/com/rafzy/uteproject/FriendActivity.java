@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -111,6 +112,11 @@ public class FriendActivity extends ActionBarActivity {
         startActivityForResult(intent, PICK_CONTACT);
 
     }
+    public void onClickShowMap(View view){
+        Intent intent = new Intent(this, MapsActivity.class);
+        startActivity(intent);
+
+    }
     @Override
     public void onActivityResult(int reqCode, int resultCode, Intent data) {
         super.onActivityResult(reqCode, resultCode, data);
@@ -134,7 +140,7 @@ public class FriendActivity extends ActionBarActivity {
 
                             String nameContact = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME));
                             SQLiteDatabase db = friendsDatabaseHelper.getWritableDatabase();
-                            friendsDatabaseHelper.insertFriend(db,nameContact,cNumber);
+                            friendsDatabaseHelper.insertFriend(db, nameContact, cNumber);
 
                             List<FriendObject> friendsList = getFriendsFromDatabase();
                             expandableListDetail.put("ZNAJOMI", friendsList);
