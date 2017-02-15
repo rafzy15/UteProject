@@ -43,6 +43,7 @@ public class CulturalObjectActivity extends ActionBarActivity {
     private List<String> expandableListTitle;
     private HashMap<String, List<String>> expandableListDetail;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

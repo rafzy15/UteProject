@@ -1,10 +1,13 @@
 package com.rafzy.uteproject;
 
+import android.app.Service;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +18,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -36,6 +40,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager locationManager;
     private static final long MIN_TIME = 0;
     private static final float MIN_DISTANCE = 0;
+    LocationListener locationListener;
+    private static String TAG = "ACTIVITY_MAP";
+
+    private JsonFromApiGetter umApiGetter;
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        if (locationManager != null) {
+                try {
+                    locationManager.removeUpdates(locationListener);
+                } catch (Exception ex) {
+                    Log.i("T", "fail to remove location listners, ignore", ex);
+                }
+
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +69,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled = false;
+        umApiGetter = new JsonFromApiGetter();
         try {
             gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
@@ -63,12 +85,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
     private class MapLocationListener implements LocationListener{
+
         @Override
         public void onLocationChanged(Location loc) {
             LatLng latLng = new LatLng(loc.getLatitude(), loc.getLongitude());
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
             mMap.clear();
-            mMap.addMarker(new MarkerOptions().position(latLng).title("Twoja pozycja"));
+            mMap.addMarker(new MarkerOptions().position(latLng).title("Twoja pozycja").
+                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+
+            allCulturalObjectNearMe(loc.getLatitude(), loc.getLongitude());
             mMap.animateCamera(cameraUpdate);
 
         }
@@ -83,6 +109,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onStatusChanged(String provider, int status, Bundle extras) {}
     }
 
+
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -93,6 +121,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * installed Google Play services and returned to the app.
      *
      */
+    public void allCulturalObjectNearMe(double latitude,double longitude) {
+        String apiID = "e26218cb-61ec-4ccb-81cc-fd19a6fee0f8";
+        Log.i(TAG, "latitude" + latitude
+                + "long " + longitude);
+        String urlToGetCulturalObject = Helper.getConfigValue(this, "um_url") + "wfsstore_get/?id=" +
+                apiID + "&circle=" + longitude +
+                "%2C" + latitude + "%2C1000&" +
+                "apikey=" + Helper.getConfigValue(this, "api_key");
+
+        Log.i(TAG, urlToGetCulturalObject);
+        JsonFromApiGetter umApiGetter = new JsonFromApiGetter();
+        umApiGetter.execute(urlToGetCulturalObject);
+    }
     private class JsonFromApiGetter extends AsyncTask<String, Integer, JSONObject> {
 
         @Override
@@ -117,8 +158,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 while ((inputLine = in.readLine()) != null) {
                     stringJson.append(inputLine);
                 }
-
-
                 jsonObject = new JSONObject(stringJson.toString());
 
                 in.close();
@@ -135,12 +174,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         protected void onPostExecute(JSONObject result) {
             try {
                 JSONArray theatreArray = result.getJSONObject("result").
+                        getJSONArray("featureMemberCoordinates");
+                JSONArray theatreProperties = result.getJSONObject("result").
                         getJSONArray("featureMemberProperties");
                 List<String> theatreList = new ArrayList<>();
                 for (int i = 0; i < theatreArray.length(); i++) {
-                    long longtitude =  Long.parseLong(theatreArray.getJSONObject(i).getString("WWW"));
-                    long latititude =  Long.parseLong(theatreArray.getJSONObject(i).getString("WWW"));
-
+                    Log.i(TAG, " " + theatreArray.get(i));
+                     String theatreName = theatreProperties.getJSONObject(i).getString("OPIS");
+                    double longtitude = Double.parseDouble(theatreArray.getJSONObject(i).getString("longitude"));
+                    double latitude = Double.parseDouble(theatreArray.getJSONObject(i).getString("latitude"));
+                    LatLng theatre = new LatLng(latitude,longtitude);
+                    Log.i(TAG," " + theatre);
+                    mMap.addMarker(new MarkerOptions().position(theatre).title(theatreName).
+                            icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
                 }
 
 
@@ -149,6 +195,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -156,7 +203,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Add a marker in Sydney and move the camera
         LatLng warsaw = new LatLng(52.2296756, 21.012228999999934);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(warsaw));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(10.0f));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(15.0f));
     }
 
 }
