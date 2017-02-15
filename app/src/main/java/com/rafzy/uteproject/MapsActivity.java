@@ -89,7 +89,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onLocationChanged(Location loc) {
             LatLng latLng = new LatLng(loc.getLatitude(), loc.getLongitude());
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 12);
             mMap.clear();
             mMap.addMarker(new MarkerOptions().position(latLng).title("Twoja pozycja").
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
@@ -203,7 +203,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Add a marker in Sydney and move the camera
         LatLng warsaw = new LatLng(52.2296756, 21.012228999999934);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(warsaw));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(15.0f));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(12.0f));
     }
 
 }
