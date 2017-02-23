@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
@@ -13,24 +14,29 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -44,15 +50,16 @@ public class FriendActivity extends ActionBarActivity {
     private FriendListAdapter friendListAdapter;
     private List<String> expandableListTitle;
     private HashMap<String, List<FriendObject>> expandableListDetail;
-    private List<String> checkedChild;
+    private List<String> checkedNumbers;
     private final static String FRIEND_TAG = "Friend_tag";
 
     private String longtitude = "";
     private final static int PICK_CONTACT = 1;
 
     private FriendsDatabaseHelper friendsDatabaseHelper;
+
     @Override
-    protected void onCreate(Bundle savedInstance){
+    protected void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
         setContentView(R.layout.friend_layout);
         List<FriendObject> friendsList = getFriendsFromDatabase();
@@ -66,7 +73,7 @@ public class FriendActivity extends ActionBarActivity {
 
         expandableListView.setAdapter(friendListAdapter);
         expandableListView.expandGroup(0);
-        checkedChild = new LinkedList<>();
+        checkedNumbers = new LinkedList<>();
         expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent,
@@ -80,26 +87,27 @@ public class FriendActivity extends ActionBarActivity {
                 cb.setChecked(!cb.isChecked());
                 TextView friendNumber = (TextView) v.findViewById(R.id.expandedFriendNumber);
                 if (cb.isChecked()) {
-                    checkedChild.add((String) friendNumber.getText());
+                    checkedNumbers.add((String) friendNumber.getText());
                 } else {
-                    checkedChild.remove(friendNumber.getText());
+                    checkedNumbers.remove(friendNumber.getText());
                 }
                 return true;
             }
         });
     }
-    private List<FriendObject> getFriendsFromDatabase(){
+
+    private List<FriendObject> getFriendsFromDatabase() {
         friendsDatabaseHelper = new FriendsDatabaseHelper(this);
         SQLiteDatabase db = friendsDatabaseHelper.getReadableDatabase();
         Cursor cursor =
                 db.query("FRIENDS", new String[]{"NAME", "NUMBER"}, null, null, null, null, null);
-        List<FriendObject> friendsList =  new LinkedList<>();
-        while(cursor.moveToNext()) {
+        List<FriendObject> friendsList = new LinkedList<>();
+        while (cursor.moveToNext()) {
             String name = cursor.getString(
                     0);
             String number = cursor.getString(
                     1);
-            FriendObject friendObject = new FriendObject(name,number);
+            FriendObject friendObject = new FriendObject(name, number);
             friendsList.add(friendObject);
 
         }
@@ -107,31 +115,32 @@ public class FriendActivity extends ActionBarActivity {
         return friendsList;
     }
 
-    public void onClickAddFriend(View view){
+    public void onClickAddFriend(View view) {
         Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
         startActivityForResult(intent, PICK_CONTACT);
 
     }
-    public void onClickShowMap(View view){
+
+    public void onClickShowMap(View view) {
         Intent intent = new Intent(this, MapsActivity.class);
         startActivity(intent);
-
     }
+
     @Override
     public void onActivityResult(int reqCode, int resultCode, Intent data) {
         super.onActivityResult(reqCode, resultCode, data);
 
         switch (reqCode) {
-            case (PICK_CONTACT) :
+            case (PICK_CONTACT):
                 if (resultCode == Activity.RESULT_OK) {
                     Uri contactData = data.getData();
-                    Cursor c =  getContentResolver().query(contactData, null, null, null, null);
+                    Cursor c = getContentResolver().query(contactData, null, null, null, null);
                     if (c.moveToFirst()) {
                         String id = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
 
                         String hasPhone = c.getString(c.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
 
-                        if (hasPhone.equalsIgnoreCase("1")){
+                        if (hasPhone.equalsIgnoreCase("1")) {
 
                             Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                                     ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id, null, null);
@@ -145,8 +154,8 @@ public class FriendActivity extends ActionBarActivity {
                             List<FriendObject> friendsList = getFriendsFromDatabase();
                             expandableListDetail.put("ZNAJOMI", friendsList);
                             friendListAdapter.notifyDataSetChanged();
-                        }else{
-                            Toast.makeText(getApplicationContext(),"Wybrany użytkownik nie ma numeru", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Wybrany użytkownik nie ma numeru", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
@@ -155,22 +164,12 @@ public class FriendActivity extends ActionBarActivity {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
     private final static String xmlResult = "<response><msisdn>48510123456</msisdn><terminal-availability>AVAILABLE</terminal-availability><terminal-page-result>OK</terminal-page-result><age-of-location>0</age-of-location><location-information><current-lac>58140</current-lac><current-cell-id>47025</current-cell-id></location-information></response>";
 
     private String myCellNumber;
-    private Pair<Double,Double> myPosition;
-    private String getCellNumber(String number){
+    private Pair<Double, Double> myPosition;
+
+    private String getCellNumber(String number) {
         Element currentCell = null;
         String urlToGetPosition = "https://api.bihapi.pl/orange/oracle/cellid?msisdn=+" + number;
         try {
@@ -181,7 +180,7 @@ public class FriendActivity extends ActionBarActivity {
             Document doc = dBuilder.parse(is);
             currentCell = (Element) doc.getElementsByTagName("current-cell-id").item(0);
             Element lac = (Element) doc.getElementsByTagName("current-lac").item(0);
-            System.out.println("Root element :" + currentCell.getTextContent() + "," +lac.getTextContent());
+            System.out.println("Root element :" + currentCell.getTextContent() + "," + lac.getTextContent());
         } catch (ParserConfigurationException pe) {
             pe.printStackTrace();
         } catch (IOException e) {
@@ -191,51 +190,73 @@ public class FriendActivity extends ActionBarActivity {
         }
         return currentCell.getTextContent();
     }
-    private String getPosition(String number){
-        return "";
-    }
-    public List<String> getFriendPosition() {
-        List<String> friendNumbers = getContact();
-        //https://api.bihapi.pl/orange/oracle/cellid?msisdn=48510123456
 
-        for (String number : friendNumbers) {
-            String friendCell = getCellNumber(number);
-            //// TODO: 12/28/16 find friends which allow to use bihapi and are near me
-            System.out.println("friend " + friendCell + " moj " + myCellNumber);
-            if(friendCell.equals(myCellNumber)){
-                System.out.println("Ten sam numer ");
-            }else {
-                System.out.println("inny ");
-            }
 
-        }
-        return friendNumbers;
-    }
     public void onClickShareWithFriend(View view) {
         TelephonyManager telemamanger = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String simSerialNumber = telemamanger.getSimSerialNumber();
 
-        setMyPositionAndCell(simSerialNumber);
-
-
-        //// TODO: 12/28/16 send sms to the friends which are at the same cell about what is interesting near me
-
+        SMSSender umApiGetter = new SMSSender();
+        umApiGetter.execute(simSerialNumber);
 //        getFriendPosition();
 //
     }
-    private void setMyPositionAndCell(String number){
-        this.myCellNumber = getCellNumber(number);
-    }
-    public List getContact() {
-        Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
-        List<String> contactList = new ArrayList<>();
-        while (phones.moveToNext()) {
-            String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-            String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-            contactList.add(phoneNumber);
+
+    public class SMSSender extends AsyncTask<String, Integer, String> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            Toast.makeText(FriendActivity.this, "Wysyłanie sms", Toast.LENGTH_LONG).show();
         }
-        phones.close();
-        return contactList;
+
+        @Override
+        protected String doInBackground(String... arg0) {
+            StringBuilder result = new StringBuilder();;
+            try {
+                URL apiUrlObject = null;
+                List<String> numberFriends = checkedNumbers;
+                String urlToSend = "";
+//                String senderNumber = arg0[0];
+                String senderNumber = "517567255";
+                for (String number : numberFriends) {
+                    System.out.println(number);
+                    if (senderNumber.length() > 11) {
+                        senderNumber = senderNumber.substring(senderNumber.length() - 11);
+                    }else if(senderNumber.length() == 9){
+                        senderNumber = "48" + senderNumber;
+                    }
+                    if (number.length() > 11) {
+                        number = number.substring(number.length() - 11);
+                    }else if(number.length() == 9){
+                        number = "48" + number;
+                    }
+                    urlToSend = "https://apitest.orange.pl/Messaging/v1/SMSOnnet?from=" + senderNumber + "&to=" + number
+                            + "&msg=test&deliverystatus=true&apikey" +
+                            "=" + Helper.getConfigValue(FriendActivity.this, "api_orange_key");
+
+                    apiUrlObject = new URL(urlToSend);
+                    BufferedReader in = new BufferedReader(
+                            new InputStreamReader(
+                                    apiUrlObject.openStream()));
+                    String inputLine = "";
+
+                    while ((inputLine = in.readLine()) != null) {
+                        result.append(inputLine + "  " + number + "\n");
+                    }
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return result.toString();
+        }
+
+        protected void onPostExecute(String result) {
+            Toast.makeText(FriendActivity.this, result, Toast.LENGTH_LONG).show();
+        }
+
     }
 
 }

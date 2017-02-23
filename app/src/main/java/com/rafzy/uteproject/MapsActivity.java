@@ -85,7 +85,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
     private class MapLocationListener implements LocationListener{
-
         @Override
         public void onLocationChanged(Location loc) {
             LatLng latLng = new LatLng(loc.getLatitude(), loc.getLongitude());
@@ -186,7 +185,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     LatLng theatre = new LatLng(latitude,longtitude);
                     Log.i(TAG," " + theatre);
                     mMap.addMarker(new MarkerOptions().position(theatre).title(theatreName).
-                            icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                            icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
                 }
 
 

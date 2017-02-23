@@ -12,6 +12,7 @@
         android:id="@+id/sendToFriendsButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:onClick="onClickShareWithFriend"
         android:text="Wyślij informacje do znajomych" />
     <Button
         android:id="@+id/addFriendButton"

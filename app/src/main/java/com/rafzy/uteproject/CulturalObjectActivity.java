@@ -158,8 +158,6 @@ public class CulturalObjectActivity extends ActionBarActivity {
                 while ((inputLine = in.readLine()) != null) {
                     stringJson.append(inputLine);
                 }
-
-
                 jsonObject = new JSONObject(stringJson.toString());
 
                 in.close();
