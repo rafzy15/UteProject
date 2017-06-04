@@ -186,6 +186,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.i(TAG," " + theatre);
                     mMap.addMarker(new MarkerOptions().position(theatre).title(theatreName).
                             icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
                 }
 
 
